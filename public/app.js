@@ -1,4 +1,10 @@
 const app = document.querySelector("#app");
+const siteBase = new URL("./", import.meta.url);
+const PAGES = location.hostname.endsWith("github.io");
+const PAGE_SESSION = "pages-session";
+const PAGE_OVERLAY = "pages-overlay";
+let pageData = null;
+let pageFeedbackAt = 0;
 const texts = new Map();
 const state = {
   view: "loading",
@@ -54,7 +60,156 @@ function safeUrl(value) {
   return "";
 }
 
+function showHome() {
+  history.replaceState(null, "", siteBase.pathname);
+}
+
+function readOverlay() {
+  try {
+    return JSON.parse(localStorage.getItem(PAGE_OVERLAY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function pageError(status, message) {
+  const error = new Error(message);
+  error.status = status;
+  throw error;
+}
+
+function pageCatalog(courseIds) {
+  return courseIds.map((id) => pageData.courses[id]).filter(Boolean).map((course) => ({
+    courseId: course.courseId,
+    label: course.label,
+    portalLabel: course.portalLabel,
+    accessCode: course.accessCode,
+    startsAt: course.startsAt,
+    contentRevision: course.revision,
+  }));
+}
+
+function pageSession() {
+  try {
+    return JSON.parse(sessionStorage.getItem(PAGE_SESSION));
+  } catch {
+    return null;
+  }
+}
+
+function pageMessages(courseId) {
+  const saved = readOverlay().channels?.[courseId];
+  const list = saved || pageData.channels[courseId] || [];
+  return list.map((message) => {
+    if (message.type !== "file") return message;
+    return { ...message, available: Boolean(pageData.files[message.file_id]?.storedName) };
+  });
+}
+
+function withPageList(bucket, courseId, change) {
+  const extra = readOverlay();
+  extra[bucket] = extra[bucket] || {};
+  if (!extra[bucket][courseId]) {
+    const source = bucket === "channels" ? pageData.channels[courseId] : pageData.feedback[courseId];
+    extra[bucket][courseId] = JSON.parse(JSON.stringify(source || []));
+  }
+  change(extra[bucket][courseId]);
+  localStorage.setItem(PAGE_OVERLAY, JSON.stringify(extra));
+}
+
+async function pagesApi(path, options = {}) {
+  const url = new URL(path, "https://pages.local");
+  const method = (options.method || "GET").toUpperCase();
+  const body = typeof options.body === "string" ? JSON.parse(options.body || "{}") : {};
+  if (url.pathname === "/api/access/session") {
+    const session = pageSession();
+    if (!session) return { hasAccess: false, role: "visitor", catalog: [] };
+    return {
+      hasAccess: true,
+      role: session.role,
+      code: session.code,
+      courseIds: session.courseIds,
+      catalog: pageCatalog(session.courseIds),
+    };
+  }
+  if (url.pathname === "/api/access/login" && method === "POST") {
+    const code = String(body.code || "").trim();
+    const entry = pageData.codes[code.toLowerCase()];
+    if (!entry) pageError(401, "代碼錯誤");
+    sessionStorage.setItem(PAGE_SESSION, JSON.stringify({ role: entry.role, code, courseIds: entry.courseIds }));
+    return { ok: true };
+  }
+  if (url.pathname === "/api/access/logout") {
+    sessionStorage.removeItem(PAGE_SESSION);
+    return { ok: true };
+  }
+  const match = url.pathname.match(/^\/api\/courses\/([^/]+)\/(content|channel|feedback|channel\/upload)$/);
+  if (!match) pageError(404, "not found");
+  const courseId = decodeURIComponent(match[1]);
+  const action = match[2];
+  const session = pageSession();
+  if (!session?.courseIds?.includes(courseId)) pageError(401, "unauthorized");
+  if (action === "content" && method === "GET") {
+    const course = pageData.courses[courseId];
+    return { courseId, revision: course.revision, chapters: course.chapters, publishedAt: course.publishedAt };
+  }
+  if (action === "channel" && method === "GET") return { messages: pageMessages(courseId) };
+  if (action === "channel/upload") pageError(400, "GitHub Pages 不能保存新上傳的檔案");
+  if (action === "channel" && method === "POST") {
+    if (session.role !== "admin") pageError(403, "forbidden");
+    if (body.type === "file") pageError(400, "GitHub Pages 不能保存新上傳的檔案");
+    const content = String(body.content || "").trim();
+    if (!content) pageError(400, "empty");
+    withPageList("channels", courseId, (list) => {
+      list.push({
+        id: crypto.randomUUID(),
+        pinned: false,
+        createdAt: new Date().toISOString(),
+        type: /^https?:\/\/\S+$/i.test(content) ? "link" : "text",
+        content,
+      });
+    });
+    return { ok: true };
+  }
+  if (action === "channel" && (method === "PATCH" || method === "DELETE")) {
+    if (session.role !== "admin") pageError(403, "forbidden");
+    const messageId = url.searchParams.get("id");
+    withPageList("channels", courseId, (list) => {
+      const index = list.findIndex((item) => item.id === messageId);
+      if (index < 0) return;
+      if (method === "DELETE") list.splice(index, 1);
+      else list[index].pinned = Boolean(body.pinned);
+    });
+    return { ok: true };
+  }
+  if (action === "feedback" && method === "GET") {
+    if (session.role !== "admin") pageError(403, "forbidden");
+    return { items: readOverlay().feedback?.[courseId] || pageData.feedback[courseId] || [] };
+  }
+  if (action === "feedback" && method === "POST") {
+    if (Date.now() - pageFeedbackAt < 30000) pageError(429, "提交太頻繁，請稍後再試");
+    const comment = String(body.comment || "").trim();
+    if (!comment || comment.length > 2000) pageError(400, "請寫一些內容再送出");
+    withPageList("feedback", courseId, (list) => {
+      list.push({ id: crypto.randomUUID(), comment, createdAt: new Date().toISOString() });
+    });
+    pageFeedbackAt = Date.now();
+    return { ok: true };
+  }
+  if (action === "feedback" && method === "DELETE") {
+    if (session.role !== "admin") pageError(403, "forbidden");
+    const itemId = url.searchParams.get("id");
+    withPageList("feedback", courseId, (list) => {
+      const index = list.findIndex((item) => item.id === itemId);
+      if (index >= 0) list.splice(index, 1);
+    });
+    return { ok: true };
+  }
+  pageError(405, "method not allowed");
+}
+
 async function api(path, options = {}) {
+  if (PAGES) return pagesApi(path, options);
   const response = await fetch(path, { cache: "no-store", ...options });
   const isJson = (response.headers.get("content-type") || "").includes("json");
   const body = isJson ? await response.json().catch(() => ({})) : null;
@@ -169,7 +324,7 @@ function loadingHtml() {
 }
 
 function loginHtml() {
-  const origin = location.origin + "/";
+  const origin = siteBase.href;
   const qr = `https://api.qrserver.com/v1/create-qr-code/?size=232x232&margin=12&data=${encodeURIComponent(origin)}`;
   return `<section class="course-entry" aria-labelledby="course-entry-title">
     <div class="course-entry__content">
@@ -319,7 +474,10 @@ function messageHtml(message) {
   const time = `<div class="msg__time">${esc(formatClock(message.createdAt))}</div>`;
   let body = "";
   if (message.type === "file") {
-    const fileHref = `/api/courses/${encodeURIComponent(state.courseId)}/files/${encodeURIComponent(message.file_id)}`;
+    const storedName = PAGES ? pageData?.files?.[message.file_id]?.storedName : "";
+    const fileHref = storedName
+      ? new URL(`files/${storedName}`, siteBase).href
+      : `/api/courses/${encodeURIComponent(state.courseId)}/files/${encodeURIComponent(message.file_id)}`;
     body = message.available
       ? `<a class="msg__file" href="${fileHref}" download="${esc(message.file_name)}">${esc(message.file_name)}</a>`
       : `<a class="msg__file" href="${fileHref}" data-action="download-file" data-name="${esc(message.file_name)}">${esc(message.file_name)}</a><p class="msg__missing">這個檔案還沒有在本機。請用老師代碼登入後，在上課素材重新上傳。</p>`;
@@ -696,7 +854,7 @@ document.addEventListener("click", async (event) => {
     state.code = "";
     state.loginBusy = false;
     state.localBusy = false;
-    history.replaceState(null, "", "/");
+    showHome();
     paint();
     return;
   }
@@ -707,7 +865,7 @@ document.addEventListener("click", async (event) => {
   if (action === "back-list") {
     stopPolls();
     state.view = "list";
-    history.replaceState(null, "", "/");
+    showHome();
     paint();
     return;
   }
@@ -808,6 +966,11 @@ document.addEventListener("click", async (event) => {
 async function boot() {
   paint();
   try {
+    if (PAGES) {
+      const response = await fetch(new URL("data.json", siteBase), { cache: "no-store" });
+      if (!response.ok) throw new Error("data");
+      pageData = await response.json();
+    }
     if (state.isLocal) {
       api("/api/access/local-admin").then((row) => {
         if (row?.code) console.log("[本機開發] 管理員登入代碼：", row.code);
