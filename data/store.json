@@ -1,0 +1,246 @@
+{
+  "codes": {
+    "tbr": {
+      "role": "student",
+      "courseIds": [
+        "digital-presentation-room-1123"
+      ]
+    },
+    "teacher": {
+      "role": "admin",
+      "courseIds": [
+        "digital-presentation-room-1123"
+      ]
+    }
+  },
+  "courses": {
+    "digital-presentation-room-1123": {
+      "courseId": "digital-presentation-room-1123",
+      "label": "數位簡報室｜AI Agent 與網站實作",
+      "portalLabel": "數位簡報室",
+      "accessCode": "tbr",
+      "startsAt": "2026-11-23T02:00:00.000Z",
+      "revision": 3,
+      "publishedAt": "2026-11-23T01:56:30.507Z",
+      "chapters": [
+        {
+          "number": "2",
+          "title": "Gmail 操作 Prompt",
+          "subgroups": [
+            {
+              "title": "上課時可直接複製",
+              "items": [
+                {
+                  "type": "prompt",
+                  "title": "讀取最近十封郵件",
+                  "content": "幫我讀取 Email 中，最近十封的郵件內容，列出主旨、寄件者與日期，簡短摘要每封信。"
+                },
+                {
+                  "type": "prompt",
+                  "title": "讀取指定郵件",
+                  "content": "請讀取主旨為「{}」的郵件，整理重點與需要我回覆的事項。"
+                },
+                {
+                  "type": "prompt",
+                  "title": "準備回覆草稿",
+                  "content": "請根據剛才確認的郵件，寫一封回覆草稿。\n先將草稿顯示在對話中，不要寄出；缺少資訊時先問我。"
+                }
+              ]
+            },
+            {
+              "title": "Canva 案例：Gmail → Canva",
+              "items": [
+                {
+                  "type": "prompt",
+                  "title": "讀取郵件並用 Canva 做圖",
+                  "content": "請讀取主旨為「{}」的郵件，整理重點資訊。\n先列在對話中讓我確認；確認後，再用 Canva 做成一張圖。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "number": "3",
+          "title": "本地工作區實作｜資料夾任務",
+          "subgroups": [
+            {
+              "title": "範例一：整理收據檔名",
+              "items": [
+                {
+                  "type": "file-link",
+                  "filename": "TransportReceiptPractice-Sep.zip",
+                  "desc": "乘車證明練習：9 月的 4 份高鐵與 Uber 收據（虛構資料，不能拿去報帳），檔名都還是亂碼",
+                  "url": "https://course-hub.kgszctstdp.workers.dev/materials/TransportReceiptPractice-Sep.zip"
+                },
+                {
+                  "type": "prompt",
+                  "title": "收據照規則改檔名",
+                  "content": "請整理目前資料夾裡的乘車證明收據：\n1. 讀出每張高鐵、Uber 收據的乘車日期（不是開立日期）、起點、終點和金額。\n2. 把地址換成看得懂的地標，例如「誠品綠園道」。\n3. 檔名改成「日期_類型_起點到終點_金額元」，例如「2026-11-04_高鐵_南港站到台中站_750元.pdf」。\n4. 只改名，不要刪除任何檔案。\n改名之前，先列出「原檔名 → 新檔名」對照表讓我確認。"
+                }
+              ]
+            },
+            {
+              "title": "範例二：本地資料夾練習素材",
+              "items": [
+                {
+                  "type": "file-link",
+                  "filename": "4月活動分析.zip",
+                  "desc": "三份練習素材（銷售 CSV、活動報告 PDF、顧客回饋 TXT），解壓縮後就是完整資料夾",
+                  "url": "https://course-hub.kgszctstdp.workers.dev/materials/ai-agent-local-workspace/4月活動分析.zip"
+                }
+              ]
+            },
+            {
+              "title": "範例二：本地資料夾任務 Prompt",
+              "items": [
+                {
+                  "type": "prompt",
+                  "title": "任務 1：看看資料夾",
+                  "content": "幫我看看裡面有什麼文件"
+                },
+                {
+                  "type": "prompt",
+                  "title": "任務 2：門市排名",
+                  "content": "請讀取「門市每日銷售.csv」，整理各門市的總營收與訂單數，列出營收最高與最低的門市，並用簡短條列說明觀察。不要建立或修改任何檔案。"
+                },
+                {
+                  "type": "prompt",
+                  "title": "任務 3：跨檔比對",
+                  "content": "請讀取「門市每日銷售.csv」、「行銷活動投放報告.pdf」和「顧客回饋摘錄.txt」，交叉比較各活動的銷售表現、投放內容與顧客回饋，找出一個最值得優化的活動，提出 3 點具體建議，並另存為「活動優化建議.pdf」。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "number": "5",
+          "title": "產品開發：從案例找方向",
+          "subgroups": [
+            {
+              "title": "先當使用者，實際操作案例",
+              "items": [
+                {
+                  "type": "link-card",
+                  "filename": "日常選物｜電商體驗",
+                  "desc": "篩選商品、加入購物車，建立一張模擬訂單。",
+                  "url": "https://course-hub.kgszctstdp.workers.dev/materials/product-demos/shop/index.html",
+                  "actionLabel": "開啟網站"
+                },
+                {
+                  "type": "link-card",
+                  "filename": "水質監測系統｜模擬數據",
+                  "desc": "切換測站、追查異常，體驗告警確認與恢復。",
+                  "url": "https://course-hub.kgszctstdp.workers.dev/materials/product-demos/water/index.html",
+                  "actionLabel": "開啟網站"
+                },
+                {
+                  "type": "link-card",
+                  "filename": "PeopleDesk｜團隊人事管理",
+                  "desc": "搜尋員工、查看特休，操作請假申請與審核。",
+                  "url": "https://course-hub.kgszctstdp.workers.dev/materials/product-demos/hr/index.html",
+                  "actionLabel": "開啟網站"
+                }
+              ]
+            },
+            {
+              "title": "開始自己的產品",
+              "items": [
+                {
+                  "type": "skill",
+                  "filename": "網站開發完整提示詞",
+                  "desc": "填入產品名稱與用途，連同 index.html／style.css／script.js 的技術規格一次貼給 AI。",
+                  "content": "幫我寫一個「[產品名稱與用途]」。\n\n技術細節使用以下規格：\n1. 製作單頁純靜態網站，首頁使用 index.html、樣式使用 style.css、互動使用 script.js，三個檔案分開存放。\n2. 直接在目前開啟的資料夾建立這三個檔案，不再包一層專案資料夾，不建立其他 HTML 頁面；導覽使用頁內區塊或錨點。\n3. 需要圖片時才建立一層 images/，圖片直接放在其中，不再建立子資料夾。\n4. 不新增 server.js、package.json、本機資料庫、建置工具或其他輔助檔案。成品可直接上傳到 Cloudflare Pages 靜態託管。\n5. 不使用 ChatGPT 的 Sites 功能建立、發布或託管網站；完成後提供本機檔案位置與預覽方式，未經要求不部署。\n6. 介面與說明使用繁體中文，支援手機與桌面；資料為空、輸入錯誤與操作完成時，都要有清楚回應。\n7. 第一版先用明確標示的模擬資料，做出可操作的完整流程；不要自行加入登入、付款或資料庫，也不要把模擬結果說成真實串接。\n\n請直接在目前資料夾完成上述檔案，並說明如何測試主要操作流程。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "number": "7",
+          "title": "Supabase 串接步驟",
+          "subgroups": [
+            {
+              "title": "第一個提問：確認帳號與專案",
+              "items": [
+                {
+                  "type": "prompt",
+                  "title": "確認 Supabase 帳號與專案",
+                  "content": "現在幫我確認我是否已經連接到 Supabase 帳號，並且幫我確認我現在 Supabase 帳號底下有哪些專案"
+                }
+              ]
+            },
+            {
+              "title": "第二個提問：分析是否需要後台",
+              "items": [
+                {
+                  "type": "prompt",
+                  "title": "分析目前專案的後台需求",
+                  "content": "現在請分析我的專案，指出哪些功能建議串接後台資料庫。最多給我三個選項，並標示最推薦的那個選項。如果目前沒有需求，請直接說明沒有需求也可以。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "number": "8",
+          "title": "Cloudflare Pages",
+          "subgroups": [
+            {
+              "items": [
+                {
+                  "type": "link-card",
+                  "filename": "Cloudflare 控制台",
+                  "desc": "登入帳號，準備直接上傳網站。",
+                  "url": "https://dash.cloudflare.com/",
+                  "actionLabel": "開啟網站"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "number": "9",
+          "title": "作品上傳",
+          "subgroups": [
+            {
+              "title": "提交課堂作品",
+              "items": [
+                {
+                  "type": "link-card",
+                  "filename": "學員作品上傳",
+                  "desc": "前往 Student Gallery，依頁面指示提交你的作品。",
+                  "url": "https://student-gallery.kgszctstdp.workers.dev/",
+                  "actionLabel": "開啟網站"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "channels": {
+    "digital-presentation-room-1123": [
+      {
+        "id": "ea11b614-d648-40dd-8259-e0c97c7a453e",
+        "type": "file",
+        "content": null,
+        "file_id": "d12409e1-e773-437a-8c05-5130422f21d6",
+        "file_name": "AI Agent 網站實作.pdf",
+        "file_mime": "application/pdf",
+        "pinned": false,
+        "createdAt": "2026-11-23T01:52:34.960Z"
+      }
+    ]
+  },
+  "feedback": {
+    "digital-presentation-room-1123": []
+  },
+  "files": {
+    "d12409e1-e773-437a-8c05-5130422f21d6": {
+      "name": "AI Agent 網站實作.pdf",
+      "mime": "application/pdf",
+      "storedName": "d12409e1-e773-437a-8c05-5130422f21d6.pdf"
+    }
+  }
+}
